@@ -1,0 +1,174 @@
+﻿<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neko Bot</title>
+    <script src="https://extension-files.twitch.tv/helper/v1/twitch-ext.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: Arial, sans-serif;
+            background: #222;
+            color: #fff;
+            padding: 8px;
+            min-height: 100vh;
+        }
+        .box {
+            background: #333;
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+        }
+        h1 { font-size: 18px; margin-bottom: 8px; }
+        .stat { font-size: 24px; font-weight: bold; color: #ffd700; margin: 8px 0; }
+        .label { font-size: 12px; color: #aaa; margin-bottom: 4px; }
+        .status { font-size: 10px; color: #888; margin-top: 8px; padding: 8px; background: #222; border-radius: 4px; }
+        .error { color: #ff4444; font-size: 11px; margin-top: 8px; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h1>ðŸ± Neko Bot</h1>
+        <div class="label">Dein Inventar</div>
+        
+        <div style="margin: 12px 0;">
+            <div class="label">ðŸ’° Gold</div>
+            <div class="stat" id="gold">0</div>
+        </div>
+
+        <div id="error" class="error" style="display:none;"></div>
+        
+        <div class="status">
+            <span id="signal">â³ Laden...</span>
+        </div>
+    </div>
+
+    <script>
+        const BACKEND_NGROK = "https://all-bikes-sell.loca.lt";
+        const BACKEND_LOCAL = "http://localhost:3001";
+        let BACKEND = BACKEND_NGROK;
+        let authToken = null;
+        let currentUsername = "unknown";
+        
+        console.log("ðŸš€ Panel geladen, warte auf Twitch SDK...");
+
+        // Teste zuerst lokalen Backend
+        async function testBackend() {
+            try {
+                const res = await fetch(`${BACKEND_LOCAL}/api/user/stats`, {
+                    method: 'GET',
+                    mode: 'cors'
+                });
+                if (res.ok) {
+                    BACKEND = BACKEND_LOCAL;
+                    console.log("âœ… Nutze lokalen Backend!");
+                }
+            } catch(e) {
+                console.log("âš ï¸ Lokaler Backend nicht erreichbar, nutze ngrok");
+                BACKEND = BACKEND_NGROK;
+            }
+        }
+        testBackend();
+
+        // Warte bis die Twitch-Library geladen ist
+        function waitForTwitch() {
+            if (!window.Twitch || !window.Twitch.ext) {
+                console.log("â³ Twitch SDK noch nicht geladen, warte...");
+                setTimeout(waitForTwitch, 100);
+                return;
+            }
+
+            console.log("âœ… Twitch SDK geladen!");
+
+            // Registriere onAuthorized Handler
+            try {
+                window.Twitch.ext.onAuthorized((auth) => {
+                    console.log("ðŸ”‘ Authorized!", auth);
+                    authToken = auth.token;
+
+                    // Twitch test mode / Hosted Mode may not provide `viewer.id`.
+                    // Versuche daher mehrere Quellen, um einen eindeutigen Namen zu bekommen.
+                    const viewerId = window.Twitch.ext.viewer?.id;
+                    const authUserId = auth.userId || auth.user_id || auth.user_id;
+
+                    if (viewerId) {
+                        currentUsername = viewerId;
+                    } else if (authUserId) {
+                        currentUsername = authUserId;
+                    } else {
+                        // Fallback: bekannter Username aus currency.json
+                        currentUsername = "neko_deko_o7";
+                    }
+
+                    console.log("ðŸ‘¤ Aktueller Benutzer:", currentUsername);
+
+                    loadData();
+                    setInterval(loadData, 5000);
+                });
+            } catch (err) {
+                console.error("âŒ Fehler bei onAuthorized:", err);
+                document.getElementById("signal").textContent = "âš ï¸ Auth Error";
+            }
+
+            // Registriere onError Handler
+            try {
+                window.Twitch.ext.onError((error) => {
+                    console.error("ðŸ”´ Twitch Error:", error);
+                    document.getElementById("error").textContent = error;
+                    document.getElementById("error").style.display = "block";
+                });
+            } catch (err) {
+                console.error("âŒ Fehler bei onError:", err);
+            }
+        }
+
+        // Starte Waiting-Loop
+        waitForTwitch();
+        
+        // Fallback: Versuche auch ohne Auth zu laden
+        setTimeout(() => {
+            if (!authToken) {
+                console.log("âš ï¸ Keine Auth nach 3s, versuche Fallback...");
+                loadData();
+                setInterval(loadData, 5000);
+            }
+        }, 3000);
+
+        async function loadData() {
+            try {
+                console.log("ðŸ“¡ Lade Daten vom Backend:", BACKEND);
+                console.log("ðŸ‘¤ FÃ¼r Benutzer:", currentUsername);
+                
+                const res = await fetch(`${BACKEND}/api/user/stats?username=${encodeURIComponent(currentUsername)}`, {
+                    method: 'GET',
+                    mode: 'cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': authToken ? `Bearer ${authToken}` : 'Bearer test'
+                    }
+                });
+                
+                console.log("ðŸ“Š Response Status:", res.status);
+                if (!res.ok) {
+                    throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+                }
+                
+                const data = await res.json();
+                console.log("âœ… Erfolg! Gold:", data.gold);
+                
+                document.getElementById("gold").textContent = data.gold || 0;
+                document.getElementById("signal").textContent = "âœ… Online";
+                document.getElementById("error").style.display = "none";
+                
+            } catch (err) {
+                console.error("âŒ Fehler:", err.message);
+                document.getElementById("signal").textContent = "âš ï¸ Offline";
+                document.getElementById("error").textContent = err.message;
+                document.getElementById("error").style.display = "block";
+            }
+        }
+    </script>
+</body>
+</html>
+

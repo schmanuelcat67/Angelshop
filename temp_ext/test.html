@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neko Bot Inventory - Test</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🐱 Neko Bot Dashboard</h1>
+            <div class="user-info">
+                <span id="username">🧪 Test Mode</span>
+            </div>
+        </header>
+
+        <section class="stats-panel">
+            <div class="stat-card">
+                <h3>🏆 Gold</h3>
+                <p class="big-number" id="gold-amount">?</p>
+                <small id="earned-total">Verdient: ?</small>
+            </div>
+            <div class="stat-card">
+                <h3>🎣 Fische</h3>
+                <p class="big-number" id="fish-count">?</p>
+                <small>Im Inventar</small>
+            </div>
+        </section>
+
+        <section class="tabs">
+            <button class="tab active" data-tab="inventory">Inventar</button>
+            <button class="tab" data-tab="shop">Shop</button>
+            <button class="tab" data-tab="crafting">Crafting</button>
+        </section>
+
+        <!-- INVENTORY TAB -->
+        <div id="inventory-tab" class="tab-content active">
+            <h2>Deine Fische</h2>
+            <div id="fish-list" class="fish-list">
+                <p class="loading">Lädt...</p>
+            </div>
+            <button class="btn" style="width: 100%; margin-top: 10px;" onclick="loadInventory()">🔄 Neu laden</button>
+        </div>
+
+        <!-- SHOP TAB -->
+        <div id="shop-tab" class="tab-content">
+            <h2>Shop</h2>
+            <div class="shop-grid">
+                <div class="shop-item">
+                    <h3>🎣 Premium Köder</h3>
+                    <p>+20% größere Fische</p>
+                    <p class="price">100 🏆</p>
+                    <button class="btn" onclick="buyUpgrade('premium_bait', 100)">Kaufen</button>
+                </div>
+                <div class="shop-item">
+                    <h3>🌊 Tiefenwasser</h3>
+                    <p>+30% bessere Chancen</p>
+                    <p class="price">150 🏆</p>
+                    <button class="btn" onclick="buyUpgrade('deep_water', 150)">Kaufen</button>
+                </div>
+                <div class="shop-item">
+                    <h3>🎫 Soundalert</h3>
+                    <p>Ding! Wenn du Fisch fängst</p>
+                    <p class="price">50 🏆</p>
+                    <button class="btn" onclick="buyUpgrade('soundalert', 50)">Kaufen</button>
+                </div>
+                <div class="shop-item">
+                    <h3>⭐ Legendary Status</h3>
+                    <p>Bronze-Abzeichen im Chat</p>
+                    <p class="price">500 🏆</p>
+                    <button class="btn" onclick="buyUpgrade('legendary', 500)">Kaufen</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- CRAFTING TAB -->
+        <div id="crafting-tab" class="tab-content">
+            <h2>Crafting</h2>
+            <p>🔨 Hier kannst du später Items craften...</p>
+        </div>
+
+        <footer>
+            <small>🧪 Test Mode • Backend: http://localhost:3001</small>
+        </footer>
+    </div>
+
+    <script src="client.js"></script>
+    <script>
+        // Test Mode Init
+        document.addEventListener("DOMContentLoaded", () => {
+            console.log("🧪 Test Mode gestartet");
+            currentUsername = "test_user";
+            document.getElementById("username").textContent = `@${currentUsername} (Test)`;
+            loadStats();
+        });
+    </script>
+</body>
+</html>

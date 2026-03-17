@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neko Bot</title>
+    <script src="https://extension-files.twitch.tv/helper/v1/twitch-ext.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: Arial, sans-serif;
+            background: #222;
+            color: #fff;
+            padding: 8px;
+            min-height: 100vh;
+        }
+        .box {
+            background: #333;
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+        }
+        h1 { font-size: 18px; margin-bottom: 8px; }
+        .stat { font-size: 24px; font-weight: bold; color: #ffd700; margin: 8px 0; }
+        .label { font-size: 12px; color: #aaa; margin-bottom: 4px; }
+        .status { font-size: 10px; color: #888; margin-top: 8px; padding: 8px; background: #222; border-radius: 4px; }
+        .error { color: #ff4444; font-size: 11px; margin-top: 8px; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h1>🐱 Neko Bot</h1>
+        <div class="label">Dein Inventar</div>
+        
+        <div style="margin: 12px 0;">
+            <div class="label">💰 Gold</div>
+            <div class="stat" id="gold">0</div>
+        </div>
+
+        <div class="label" style="font-size:11px; opacity:0.8; margin-top: 4px;">
+            Benutzer: <span id="username">?</span> • Backend: <span id="backend">?</span>
+        </div>
+
+        <div id="error" class="error" style="display:none;"></div>
+        
+        <div class="status">
+            <span id="signal">⏳ Laden...</span>
+        </div>
+    </div>
+
+    <script src="panel.js"></script>
+</body>
+</html>

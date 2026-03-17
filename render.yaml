@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: nekobot-extension-backend
+    runtime: node
+    rootDir: extension-backend
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: TWITCH_EXT_SECRET
+        sync: false

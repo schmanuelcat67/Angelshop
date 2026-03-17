@@ -1,0 +1,59 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Backend Test</title>
+    <style>
+        body { font-family: Arial; background: #222; color: #fff; padding: 20px; }
+        .box { background: #333; padding: 20px; border-radius: 8px; margin: 10px 0; }
+        button { background: #0066ff; color: #fff; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; }
+        .result { background: #1a1a1a; padding: 10px; border-left: 3px solid #ffd700; margin-top: 10px; font-size: 12px; }
+        .error { border-left-color: #ff4444; }
+        .success { border-left-color: #44ff44; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h1>ðŸ”§ Backend Test</h1>
+        <p>Teste die ngrok URL direkt:</p>
+        <button onclick="testBackend()">Test Backend</button>
+        <button onclick="testDirect()">Test Direct (localhost)</button>
+        <div id="log"></div>
+    </div>
+
+    <script>
+        function log(msg, isError = false) {
+            const div = document.getElementById('log');
+            const result = document.createElement('div');
+            result.className = 'result ' + (isError ? 'error' : 'success');
+            result.textContent = msg;
+            div.appendChild(result);
+            console.log(msg);
+        }
+
+        async function testBackend() {
+            log("ðŸ” Teste ngrok Backend...");
+            try {
+                const res = await fetch('https://all-bikes-sell.loca.lt/api/user/stats');
+                log(`ðŸ“Š Response Status: ${res.status}`, false);
+                const data = await res.json();
+                log(`âœ… Data: ${JSON.stringify(data)}`, false);
+            } catch (e) {
+                log(`âŒ Error: ${e.message}`, true);
+            }
+        }
+
+        async function testDirect() {
+            log("ðŸ” Teste localhost:3001...");
+            try {
+                const res = await fetch('http://localhost:3001/api/user/stats');
+                log(`ðŸ“Š Response Status: ${res.status}`, false);
+                const data = await res.json();
+                log(`âœ… Data: ${JSON.stringify(data)}`, false);
+            } catch (e) {
+                log(`âŒ Error: ${e.message}`, true);
+            }
+        }
+    </script>
+</body>
+</html>
+
