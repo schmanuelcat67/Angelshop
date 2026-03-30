@@ -2,17 +2,30 @@ import tmi from "tmi.js";
 import "dotenv/config";
 import fs from "fs";
 import path from "path";
-import { fileURLToPath } from "url";
+import { getDataDir, getStorageInfo, initPersistentCache, syncState } from "./storage.js";
 
 /* ========================
    ENV + CONNECT
 ======================== */
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DATA_DIR = process.env.DATA_DIR ? path.resolve(process.env.DATA_DIR) : __dirname;
+const DATA_DIR = getDataDir();
+const DEFAULT_ACHIEVEMENTS = {
+  boobsH: { globalUnlocked: false, firstBy: null, unlockedUsers: {} },
+  boobsBeasty: { globalUnlocked: false, firstBy: null, unlockedUsers: {} },
+};
 
-fs.mkdirSync(DATA_DIR, { recursive: true });
+await initPersistentCache({
+  drinks: { count: 0 },
+  achievements: DEFAULT_ACHIEVEMENTS,
+  command_usage: { commands: {} },
+  fish_inventory: {},
+  currency: {},
+  user_map: { byId: {}, byName: {} },
+});
+
+const storageInfo = getStorageInfo();
 console.log("Data directory:", DATA_DIR);
+console.log(`Storage mode: ${storageInfo.mode} (${storageInfo.location})`);
 
 const PASSWORD = process.env.TWITCH_OAUTH_TOKEN?.startsWith("oauth:")
   ? process.env.TWITCH_OAUTH_TOKEN
@@ -54,7 +67,7 @@ if (fs.existsSync(DRINK_FILE)) {
 }
 
 function saveDrinks() {
-  fs.writeFileSync(DRINK_FILE, JSON.stringify({ count: drinkCount }, null, 2));
+  syncState("drinks", { count: drinkCount });
 }
 
 const ACH_FILE = path.join(DATA_DIR, "achievements.json");
@@ -79,8 +92,7 @@ const ACH_LIST = [
 // }
 
 let achievements = {
-  boobsH: { globalUnlocked: false, firstBy: null, unlockedUsers: {} },
-  boobsBeasty: { globalUnlocked: false, firstBy: null, unlockedUsers: {} },
+  ...DEFAULT_ACHIEVEMENTS,
 };
 
 if (fs.existsSync(ACH_FILE)) {
@@ -98,7 +110,7 @@ if (fs.existsSync(ACH_FILE)) {
 }
 
 function saveAchievements() {
-  fs.writeFileSync(ACH_FILE, JSON.stringify(achievements, null, 2));
+  syncState("achievements", achievements);
 }
 
 /**
@@ -155,7 +167,7 @@ if (fs.existsSync(USAGE_FILE)) {
 }
 
 function saveUsage() {
-  fs.writeFileSync(USAGE_FILE, JSON.stringify(commandUsage, null, 2));
+  syncState("command_usage", commandUsage);
 }
 
 function incUsage(commandName, username) {
@@ -183,7 +195,7 @@ if (fs.existsSync(FISH_INVENTORY_FILE)) {
 }
 
 function saveFishInventory() {
-  fs.writeFileSync(FISH_INVENTORY_FILE, JSON.stringify(fishInventory, null, 2));
+  syncState("fish_inventory", fishInventory);
 }
 
 /* ========================
@@ -210,7 +222,7 @@ if (fs.existsSync(USER_MAP_FILE)) {
 }
 
 function saveUserMap() {
-  fs.writeFileSync(USER_MAP_FILE, JSON.stringify(userMap, null, 2));
+  syncState("user_map", userMap);
 }
 
 if (fs.existsSync(CURRENCY_FILE)) {
@@ -225,7 +237,7 @@ if (fs.existsSync(CURRENCY_FILE)) {
 }
 
 function saveCurrency() {
-  fs.writeFileSync(CURRENCY_FILE, JSON.stringify(currency, null, 2));
+  syncState("currency", currency);
 }
 
 // Wichtig: Lade aktuelle Werte von Disk vor jeder Operation!

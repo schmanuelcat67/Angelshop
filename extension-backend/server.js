@@ -5,6 +5,7 @@ import path from "path";
 import jwt from "jsonwebtoken";
 import "dotenv/config";
 import { fileURLToPath } from "url";
+import { getDataDir, getStorageInfo, initPersistentCache, syncState } from "../storage.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -38,10 +39,20 @@ app.use(express.json());
 // Twitch Extension Client Secret
 const CLIENT_SECRET = process.env.TWITCH_EXT_SECRET || "your-secret-here";
 
+await initPersistentCache({
+  drinks: { count: 0 },
+  achievements: {},
+  command_usage: { commands: {} },
+  fish_inventory: {},
+  currency: {},
+  user_map: { byId: {}, byName: {} },
+});
+
 // Data directory (shared mit main bot)
-const DATA_DIR = process.env.DATA_DIR ? path.resolve(process.env.DATA_DIR) : path.join(__dirname, "..");
-fs.mkdirSync(DATA_DIR, { recursive: true });
+const DATA_DIR = getDataDir();
+const storageInfo = getStorageInfo();
 console.log(`📁 Extension data dir: ${DATA_DIR}`);
+console.log(`🗄️ Backend storage: ${storageInfo.mode} (${storageInfo.location})`);
 
 function resolveUsernameKey(map, requestedUsername) {
   if (!requestedUsername || typeof requestedUsername !== "string") {
@@ -250,8 +261,8 @@ app.post("/api/sell-fish", verifyExtensionToken, (req, res) => {
 
     currency[resolvedUsername].gold += sellPrice;
 
-    fs.writeFileSync(currencyFile, JSON.stringify(currency, null, 2));
-    fs.writeFileSync(fishInventoryFile, JSON.stringify(fishInventory, null, 2));
+    syncState("currency", currency);
+    syncState("fish_inventory", fishInventory);
 
     res.json({ success: true, goldEarned: sellPrice, newGold: currency[resolvedUsername].gold });
   } catch (err) {
@@ -296,7 +307,7 @@ app.post("/api/buy-upgrade", verifyExtensionToken, (req, res) => {
       currency[resolvedUsername].craftedItems.push(upgradeName);
     }
 
-    fs.writeFileSync(currencyFile, JSON.stringify(currency, null, 2));
+    syncState("currency", currency);
 
     res.json({
       success: true,
