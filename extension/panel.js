@@ -1,4 +1,4 @@
-﻿const BACKEND_RENDER = "https://YOUR-RENDER-SERVICE.onrender.com";
+﻿const BACKEND_RENDER = "https://nekobot-extension-backend-production.up.railway.app";
 const BACKEND_LOCAL = "http://localhost:3001";
 const FALLBACK_USERNAME = "neko_deko_o7";
 

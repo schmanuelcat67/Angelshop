@@ -15,10 +15,10 @@
   },
   "requiredPermissions": [],
   "allowlist": [
-    "https://YOUR-RENDER-SERVICE.onrender.com"
+    "https://nekobot-extension-backend-production.up.railway.app"
   ],
   "ebs": {
-    "baseUrl": "https://YOUR-RENDER-SERVICE.onrender.com"
+    "baseUrl": "https://nekobot-extension-backend-production.up.railway.app"
   }
 }
 
