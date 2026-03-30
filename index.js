@@ -24,6 +24,12 @@ await initPersistentCache({
 });
 
 const storageInfo = getStorageInfo();
+const SHOP_BASE_URL = String(
+  process.env.PUBLIC_SHOP_URL ||
+  process.env.SHOP_URL ||
+  (process.env.RAILWAY_PUBLIC_DOMAIN ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}` : "http://localhost:3001")
+).replace(/\/$/, "");
+
 console.log("Data directory:", DATA_DIR);
 console.log(`Storage mode: ${storageInfo.mode} (${storageInfo.location})`);
 
@@ -339,6 +345,13 @@ function rand(arr) {
 
 function getUsername(tags) {
   return (tags?.username || tags?.["display-name"] || "user").toLowerCase();
+}
+
+function buildShopUrl(username = "") {
+  const base = SHOP_BASE_URL || "http://localhost:3001";
+  return username
+    ? `${base}/shop?user=${encodeURIComponent(username)}`
+    : `${base}/shop`;
 }
 
 function recordUserIdentity(tags) {
@@ -1062,6 +1075,11 @@ mycoms: async (channel, tags) => {
 
   return { text: `@${username} Deine Top Commands: ${text}`, count: false };
 },
+
+  shop: async (channel, tags) => {
+    const username = getUsername(tags);
+    return { text: `@${username} 🛒 Dein Shop: ${buildShopUrl(username)}`, count: false };
+  },
 
   gold: async (channel, tags) => {
     const username = getUsername(tags);

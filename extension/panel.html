@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neko Bot</title>
-    <script src="https://extension-files.twitch.tv/helper/v1/twitch-ext.min.js"></script>
+    <title>Neko Bot Shop</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -37,6 +36,21 @@
             font-size: 11px;
             color: #c9c9da;
             margin-bottom: 10px;
+        }
+        .toolbar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        .user-input {
+            flex: 1;
+            min-width: 140px;
+            padding: 8px 10px;
+            border-radius: 8px;
+            border: 1px solid #4b4b66;
+            background: #171724;
+            color: #fff;
         }
         .pill {
             padding: 4px 8px;
@@ -135,6 +149,15 @@
             opacity: 0.55;
             cursor: not-allowed;
         }
+        .ghost-btn {
+            background: #242438;
+            color: #fff;
+            border: 1px solid #4b4b66;
+            border-radius: 8px;
+            padding: 8px 10px;
+            font-size: 11px;
+            cursor: pointer;
+        }
         .error {
             color: #ff8f8f;
             font-size: 11px;
@@ -151,6 +174,12 @@
         <div class="meta">
             <span>Benutzer: <span id="username">?</span></span>
             <span id="signal" class="pill">⏳ Laden...</span>
+        </div>
+
+        <div class="toolbar">
+            <input id="userInput" class="user-input" type="text" placeholder="Twitch-Name eingeben" />
+            <button class="ghost-btn" onclick="applyUserFromInput()">Laden</button>
+            <button class="ghost-btn" onclick="copyShopLink()">Link kopieren</button>
         </div>
 
         <div class="stats">

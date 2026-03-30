@@ -1,4 +1,7 @@
-﻿const BACKEND_RENDER = "https://nekobot-extension-backend-production.up.railway.app";
+﻿const DEFAULT_REMOTE_BACKEND = "https://nekobot-extension-backend-production.up.railway.app";
+const BACKEND_RENDER = window.location?.origin && window.location.origin !== "null"
+  ? window.location.origin
+  : DEFAULT_REMOTE_BACKEND;
 const BACKEND_LOCAL = "http://localhost:3001";
 const FALLBACK_USERNAME = "neko_deko_o7";
 
@@ -17,22 +20,26 @@ let lastStats = { gold: 0, fishCount: 0, upgrades: {}, craftedItems: [] };
 
 const isLocalRig = ["localhost", "127.0.0.1"].includes(window.location.hostname);
 
-console.log("Panel JS geladen, warte auf Twitch SDK...");
+console.log("Shop geladen, initialisiere Website...");
 initPanel();
-testBackend();
-waitForTwitch();
-
-setTimeout(() => {
-  if (!authToken) {
-    console.log("Keine Auth nach 3s, nutze Fallback-Ladung");
-    startPolling();
-  }
-}, 3000);
+testBackend().finally(() => {
+  waitForTwitch();
+});
 
 function initPanel() {
   renderShop();
   setUiUser(FALLBACK_USERNAME);
   setStatus("⏳ Laden...", false);
+
+  const input = document.getElementById("userInput");
+  if (input) {
+    input.value = FALLBACK_USERNAME;
+    input.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        applyUserFromInput();
+      }
+    });
+  }
 }
 
 function escapeHtml(value) {
@@ -53,12 +60,42 @@ function setUiUser(nameForDisplay) {
   document.getElementById("username").textContent = nameForDisplay || "?";
 }
 
+function syncUserInput(value) {
+  const input = document.getElementById("userInput");
+  if (input) {
+    input.value = value || "";
+  }
+}
+
 function setResolvedUsername(username) {
   currentUsername = username || FALLBACK_USERNAME;
+  syncUserInput(currentUsername);
   try {
     localStorage.setItem("neko_last_username", currentUsername);
   } catch {
     // ignore storage errors in embedded browsers
+  }
+}
+
+function applyUserFromInput() {
+  const input = document.getElementById("userInput");
+  const value = String(input?.value || "").trim().replace(/^@/, "");
+  if (!value) {
+    return;
+  }
+
+  setResolvedUsername(value.toLowerCase());
+  setUiUser(value);
+  loadData();
+}
+
+async function copyShopLink() {
+  const url = `${window.location.origin}/shop?user=${encodeURIComponent(currentUsername)}`;
+  try {
+    await navigator.clipboard.writeText(url);
+    setStatus("🔗 Link kopiert", true);
+  } catch {
+    showError("Link konnte nicht kopiert werden.");
   }
 }
 
@@ -143,8 +180,13 @@ async function testBackend() {
 }
 
 function waitForTwitch() {
+  const resolved = resolveViewerName();
+  setResolvedUsername(resolved.lookup);
+  setUiUser(resolved.display || resolved.lookup);
+
   if (!window.Twitch || !window.Twitch.ext) {
-    setTimeout(waitForTwitch, 100);
+    console.log("Web-Shop Modus aktiv");
+    startPolling();
     return;
   }
 
@@ -153,17 +195,17 @@ function waitForTwitch() {
   try {
     window.Twitch.ext.onAuthorized((auth) => {
       authToken = auth.token || null;
-      const resolved = resolveViewerName();
+      const twitchResolved = resolveViewerName();
 
-      setResolvedUsername(resolved.lookup);
-      setUiUser(resolved.display || resolved.lookup);
+      setResolvedUsername(twitchResolved.lookup);
+      setUiUser(twitchResolved.display || twitchResolved.lookup);
 
-      console.log("Viewer erkannt:", resolved);
+      console.log("Viewer erkannt:", twitchResolved);
       startPolling();
     });
   } catch (error) {
     console.error("Fehler bei onAuthorized:", error);
-    setStatus("Auth Error", false);
+    startPolling();
   }
 
   try {
@@ -338,19 +380,19 @@ async function buyUpgrade(itemKey) {
     return;
   }
 
-  if (!authToken) {
-    showError("Käufe gehen nur direkt im Twitch-Panel mit Autorisierung.");
-    return;
-  }
-
   try {
+    const headers = {
+      "Content-Type": "application/json",
+    };
+
+    if (authToken) {
+      headers["Authorization"] = `Bearer ${authToken}`;
+    }
+
     const response = await fetch(`${BACKEND}/api/buy-upgrade`, {
       method: "POST",
       mode: "cors",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${authToken}`,
-      },
+      headers,
       body: JSON.stringify({
         username: currentUsername,
         upgradeName: item.key,
@@ -373,4 +415,6 @@ async function buyUpgrade(itemKey) {
 }
 
 window.buyUpgrade = buyUpgrade;
+window.applyUserFromInput = applyUserFromInput;
+window.copyShopLink = copyShopLink;
 

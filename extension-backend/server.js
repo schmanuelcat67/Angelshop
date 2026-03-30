@@ -36,6 +36,9 @@ app.use(cors(corsOptions));
 app.options("*", cors(corsOptions)); // Preflight für alle Routen
 app.use(express.json());
 
+const WEB_DIR = path.join(__dirname, "..", "extension");
+app.use(express.static(WEB_DIR));
+
 // Twitch Extension Client Secret
 const RAW_CLIENT_SECRET = String(process.env.TWITCH_EXT_SECRET || "your-secret-here").trim();
 const CLIENT_SECRET = RAW_CLIENT_SECRET && RAW_CLIENT_SECRET !== "your-secret-here"
@@ -226,8 +229,17 @@ app.get("/api/user/inventory", (req, res) => {
 });
 
 // POST /api/sell-fish - Sell a fish
-app.post("/api/sell-fish", verifyExtensionToken, (req, res) => {
+app.post("/api/sell-fish", (req, res) => {
   try {
+    const token = req.headers["authorization"]?.split(" ")[1];
+    if (token && token !== "test") {
+      try {
+        jwt.verify(token, CLIENT_SECRET, { algorithms: ["HS256"] });
+      } catch (err) {
+        console.warn("Sell token verification skipped:", err.message);
+      }
+    }
+
     const { username, fishIndex } = req.body;
     const currencyFile = path.join(DATA_DIR, "currency.json");
     const fishInventoryFile = path.join(DATA_DIR, "fish_inventory.json");
@@ -273,8 +285,17 @@ app.post("/api/sell-fish", verifyExtensionToken, (req, res) => {
 });
 
 // POST /api/buy-upgrade
-app.post("/api/buy-upgrade", verifyExtensionToken, (req, res) => {
+app.post("/api/buy-upgrade", (req, res) => {
   try {
+    const token = req.headers["authorization"]?.split(" ")[1];
+    if (token && token !== "test") {
+      try {
+        jwt.verify(token, CLIENT_SECRET, { algorithms: ["HS256"] });
+      } catch (err) {
+        console.warn("Buy token verification skipped:", err.message);
+      }
+    }
+
     const { username, upgradeName, upgradeCost } = req.body;
     const currencyFile = path.join(DATA_DIR, "currency.json");
 
@@ -322,11 +343,19 @@ app.post("/api/buy-upgrade", verifyExtensionToken, (req, res) => {
   }
 });
 
+// Externer Shop als normale Website
+app.get("/", (req, res) => {
+  res.redirect("/shop");
+});
+
+app.get("/shop", (req, res) => {
+  res.sendFile(path.join(WEB_DIR, "panel.html"));
+});
+
 // Health check
 app.get("/health", (req, res) => {
   res.json({ status: "OK" });
 });
-
 const PORT = process.env.PORT || process.env.EXT_BACKEND_PORT || 3001;
 app.listen(PORT, () => {
   console.log(`✅ Extension Backend läuft auf http://localhost:${PORT}`);
