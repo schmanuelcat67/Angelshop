@@ -1,6 +1,6 @@
 ﻿{
   "id": "s0n5wbcozvzclfn9u5a0jgk7isdxdl",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "name": "Neko Bot Inventar",
   "description": "Live Gold & Statistiken",
   "author": "Neko_Deko_o7",
@@ -15,10 +15,10 @@
   },
   "requiredPermissions": [],
   "allowlist": [
-    "https://YOUR-RENDER-SERVICE.onrender.com"
+    "https://nekobot-extension-backend-production.up.railway.app"
   ],
   "ebs": {
-    "baseUrl": "https://YOUR-RENDER-SERVICE.onrender.com"
+    "baseUrl": "https://nekobot-extension-backend-production.up.railway.app"
   }
 }
 
