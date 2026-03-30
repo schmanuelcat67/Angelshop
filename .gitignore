@@ -1,0 +1,12 @@
+node_modules/
+.env
+.env.*
+*.log
+extension/extension.zip
+extension-backend/.env
+currency.json
+fish_inventory.json
+command_usage.json
+drinks.json
+achievements.json
+user_map.json
