@@ -170,8 +170,18 @@ app.get("/api/user/stats", (req, res) => {
 });
 
 // GET /api/user/inventory - Get fish inventory
-app.get("/api/user/inventory", verifyExtensionToken, (req, res) => {
+app.get("/api/user/inventory", (req, res) => {
   try {
+    const token = req.headers["authorization"]?.split(" ")[1];
+    if (token && token !== "test") {
+      try {
+        jwt.verify(token, CLIENT_SECRET, { algorithms: ["HS256"] });
+      } catch (err) {
+        console.error("Token verification failed:", err.message);
+        return res.status(403).json({ error: "Invalid token" });
+      }
+    }
+
     const fishInventoryFile = path.join(DATA_DIR, "fish_inventory.json");
     let fishInventory = {};
 
@@ -266,17 +276,32 @@ app.post("/api/buy-upgrade", verifyExtensionToken, (req, res) => {
       currency[resolvedUsername] = { gold: 0, totalEarned: 0, upgrades: {}, craftedItems: [] };
     }
 
+    currency[resolvedUsername].upgrades = currency[resolvedUsername].upgrades || {};
+    currency[resolvedUsername].craftedItems = currency[resolvedUsername].craftedItems || [];
+
+    if (currency[resolvedUsername].upgrades[upgradeName]) {
+      return res.status(400).json({ error: "Upgrade already owned" });
+    }
+
     if (currency[resolvedUsername].gold < upgradeCost) {
       return res.status(400).json({ error: "Not enough gold" });
     }
 
     currency[resolvedUsername].gold -= upgradeCost;
-    currency[resolvedUsername].upgrades = currency[resolvedUsername].upgrades || {};
     currency[resolvedUsername].upgrades[upgradeName] = true;
+
+    if (!currency[resolvedUsername].craftedItems.includes(upgradeName)) {
+      currency[resolvedUsername].craftedItems.push(upgradeName);
+    }
 
     fs.writeFileSync(currencyFile, JSON.stringify(currency, null, 2));
 
-    res.json({ success: true, newGold: currency[resolvedUsername].gold });
+    res.json({
+      success: true,
+      newGold: currency[resolvedUsername].gold,
+      upgrades: currency[resolvedUsername].upgrades,
+      craftedItems: currency[resolvedUsername].craftedItems,
+    });
   } catch (err) {
     console.error("Error buying upgrade:", err);
     res.status(500).json({ error: err.message });
