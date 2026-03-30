@@ -1,10 +1,18 @@
 import tmi from "tmi.js";
 import "dotenv/config";
 import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
 /* ========================
    ENV + CONNECT
 ======================== */
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const DATA_DIR = process.env.DATA_DIR ? path.resolve(process.env.DATA_DIR) : __dirname;
+
+fs.mkdirSync(DATA_DIR, { recursive: true });
+console.log("Data directory:", DATA_DIR);
 
 const PASSWORD = process.env.TWITCH_OAUTH_TOKEN?.startsWith("oauth:")
   ? process.env.TWITCH_OAUTH_TOKEN
@@ -36,7 +44,7 @@ client.on("disconnected", (reason) => console.log("❌ disconnected:", reason));
    PERSISTENTE DATEN
 ======================== */
 
-const DRINK_FILE = "./drinks.json";
+const DRINK_FILE = path.join(DATA_DIR, "drinks.json");
 let drinkCount = 0;
 
 if (fs.existsSync(DRINK_FILE)) {
@@ -49,7 +57,7 @@ function saveDrinks() {
   fs.writeFileSync(DRINK_FILE, JSON.stringify({ count: drinkCount }, null, 2));
 }
 
-const ACH_FILE = "./achievements.json";
+const ACH_FILE = path.join(DATA_DIR, "achievements.json");
 
 const ACH_LIST = [
   { key: "cock69", name: "Die perfekte Länge", desc: "Rolle 69cm bei !cock", hidden: true },
@@ -131,7 +139,7 @@ function handleAchievement(key, achievementName, username, shortName) {
   return ` ✨ (${shortName} schon mal gehabt!)`;
 }
 
-const USAGE_FILE = "./command_usage.json";
+const USAGE_FILE = path.join(DATA_DIR, "command_usage.json");
 
 let commandUsage = { commands: {} };
 
@@ -160,7 +168,7 @@ function incUsage(commandName, username) {
    FISCH INVENTAR
 ======================== */
 
-const FISH_INVENTORY_FILE = "./fish_inventory.json";
+const FISH_INVENTORY_FILE = path.join(DATA_DIR, "fish_inventory.json");
 let fishInventory = {};
 
 if (fs.existsSync(FISH_INVENTORY_FILE)) {
@@ -182,10 +190,10 @@ function saveFishInventory() {
    CURRENCY / GOLD SYSTEM
 ======================== */
 
-const CURRENCY_FILE = "./currency.json";
+const CURRENCY_FILE = path.join(DATA_DIR, "currency.json");
 let currency = {}; // { username: { gold: 0, totalEarned: 0 } }
 
-const USER_MAP_FILE = "./user_map.json";
+const USER_MAP_FILE = path.join(DATA_DIR, "user_map.json");
 let userMap = { byId: {}, byName: {} };
 
 if (fs.existsSync(USER_MAP_FILE)) {
@@ -345,6 +353,7 @@ function recordUserIdentity(tags) {
     saveUserMap();
   }
 }
+
 
 /**
  * Prüft Cooldown.
@@ -1092,21 +1101,6 @@ mycoms: async (channel, tags) => {
     const newGold = addGold(username, sellPrice);
     
     return { text: `@${username} Verkauft: ${fish.size}cm ${fish.name} ${fish.emoji} für ${sellPrice}🏆 (Total: ${newGold}🏆)`, count: true };
-  },
-
-  soundalert: async (channel, tags, args) => {
-    const username = getUsername(tags);
-    const cost = 50; // 50 Gold für einen Alert
-    
-    const currentGold = removeGold(username, cost);
-    if (currentGold === null) {
-      return { text: `@${username} Du hast nicht genug Gold! (kostet ${cost}🏆)`, count: false };
-    }
-    
-    // Hier: Webhook zu Soundalerts/YouTube senden
-    // z.B. POST zu streamlabs.com/api/alerts/...
-    
-    return { text: `@${username} 🔊 Soundalert gesendet! -${cost}🏆`, count: true };
   }
 };
 

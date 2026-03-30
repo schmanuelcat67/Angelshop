@@ -3,7 +3,7 @@ const BACKEND_LOCAL = "http://localhost:3001";
 const FALLBACK_USERNAME = "neko_deko_o7";
 
 const SHOP_ITEMS = [
-  { key: "soundalert_ping", name: "🔊 Sound Ping", cost: 120, desc: "Kaufbares Sound-Item für dein Profil." },
+  { key: "tackle_box", name: "🧰 Tackle Box", cost: 120, desc: "Mehr Platz und Style für dein Angel-Inventar." },
   { key: "premium_bait", name: "🪱 Premium Köder", cost: 250, desc: "Upgrade für deinen Angelshop." },
   { key: "lucky_charm", name: "🍀 Lucky Charm", cost: 400, desc: "Seltenes Glücks-Item fürs Inventar." },
   { key: "golden_rod", name: "🎣 Goldene Rute", cost: 650, desc: "Legendäres Showcase-Item für Sammler." },

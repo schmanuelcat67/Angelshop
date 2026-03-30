@@ -39,7 +39,9 @@ app.use(express.json());
 const CLIENT_SECRET = process.env.TWITCH_EXT_SECRET || "your-secret-here";
 
 // Data directory (shared mit main bot)
-const DATA_DIR = path.join(__dirname, "..", "");
+const DATA_DIR = process.env.DATA_DIR ? path.resolve(process.env.DATA_DIR) : path.join(__dirname, "..");
+fs.mkdirSync(DATA_DIR, { recursive: true });
+console.log(`📁 Extension data dir: ${DATA_DIR}`);
 
 function resolveUsernameKey(map, requestedUsername) {
   if (!requestedUsername || typeof requestedUsername !== "string") {
