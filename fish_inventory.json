@@ -61,10 +61,16 @@
       "timestamp": "2026-03-17T21:49:37.472Z"
     },
     {
-      "name": "Forelle",
-      "size": 28,
-      "emoji": "🐠",
+      "name": "Karpfen",
+      "size": 42,
+      "emoji": "🐟",
       "timestamp": "2026-03-30T18:45:50.266Z"
+    },
+    {
+      "name": "Hecht",
+      "size": 83,
+      "emoji": "🍣",
+      "timestamp": "2026-03-30T20:11:55.309Z"
     }
   ]
 }
