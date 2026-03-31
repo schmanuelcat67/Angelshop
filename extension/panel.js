@@ -1,6 +1,12 @@
 ﻿const DEFAULT_REMOTE_BACKEND = "https://nekobot-extension-backend-production.up.railway.app";
-const BACKEND_RENDER = window.location?.origin && window.location.origin !== "null"
+const CURRENT_HOST = window.location?.hostname || "";
+const CURRENT_ORIGIN = window.location?.origin && window.location.origin !== "null"
   ? window.location.origin
+  : "";
+const IS_LOCAL_HOST = ["localhost", "127.0.0.1"].includes(CURRENT_HOST);
+const IS_DIRECT_BACKEND_HOST = IS_LOCAL_HOST || /(?:^|\.)up\.railway\.app$/i.test(CURRENT_HOST) || /(?:^|\.)onrender\.com$/i.test(CURRENT_HOST);
+const BACKEND_RENDER = IS_DIRECT_BACKEND_HOST && CURRENT_ORIGIN
+  ? CURRENT_ORIGIN
   : DEFAULT_REMOTE_BACKEND;
 const BACKEND_LOCAL = "http://localhost:3001";
 const FALLBACK_USERNAME = "neko_deko_o7";
@@ -18,7 +24,7 @@ let currentUsername = FALLBACK_USERNAME;
 let refreshTimer = null;
 let lastStats = { gold: 0, fishCount: 0, upgrades: {}, craftedItems: [] };
 
-const isLocalRig = ["localhost", "127.0.0.1"].includes(window.location.hostname);
+const isLocalRig = IS_LOCAL_HOST;
 
 console.log("Shop geladen, initialisiere Website...");
 initPanel();
@@ -90,7 +96,10 @@ function applyUserFromInput() {
 }
 
 async function copyShopLink() {
-  const url = `${window.location.origin}/shop?user=${encodeURIComponent(currentUsername)}`;
+  const shareBase = IS_DIRECT_BACKEND_HOST && CURRENT_ORIGIN
+    ? CURRENT_ORIGIN
+    : DEFAULT_REMOTE_BACKEND;
+  const url = `${shareBase}/shop?user=${encodeURIComponent(currentUsername)}`;
   try {
     await navigator.clipboard.writeText(url);
     setStatus("🔗 Link kopiert", true);
