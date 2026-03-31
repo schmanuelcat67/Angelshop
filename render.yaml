@@ -2,9 +2,9 @@ services:
   - type: web
     name: nekobot-extension-backend
     runtime: node
-    rootDir: extension-backend
     buildCommand: npm install
-    startCommand: node server.js
+    startCommand: npm start
+    healthCheckPath: /health
     envVars:
       - key: NODE_VERSION
         value: 20

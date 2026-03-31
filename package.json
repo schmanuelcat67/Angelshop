@@ -4,10 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "node extension-backend/server.js",
+    "start:all": "node server.js",
     "start:bot": "node index.js",
     "start:backend": "node extension-backend/server.js",
-    "start:railway": "node extension-backend/server.js",
     "dev": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
