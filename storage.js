@@ -4,7 +4,12 @@ import { MongoClient } from "mongodb";
 import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DATA_DIR = process.env.DATA_DIR ? path.resolve(process.env.DATA_DIR) : __dirname;
+const LEGACY_DATA_DIR = __dirname;
+const DATA_DIR = process.env.DATA_DIR
+  ? path.resolve(process.env.DATA_DIR)
+  : process.env.RAILWAY_VOLUME_MOUNT_PATH
+    ? path.resolve(process.env.RAILWAY_VOLUME_MOUNT_PATH)
+    : path.join(__dirname, "data");
 const STATE_COLLECTION_NAME = process.env.MONGO_COLLECTION || "nekobot_state";
 
 const KEY_TO_FILE = {
@@ -31,6 +36,24 @@ function cloneValue(value) {
 
 function ensureDataDir() {
   fs.mkdirSync(DATA_DIR, { recursive: true });
+}
+
+function migrateLegacyFiles() {
+  if (path.resolve(DATA_DIR) === path.resolve(LEGACY_DATA_DIR)) {
+    return;
+  }
+
+  ensureDataDir();
+
+  for (const fileName of Object.values(KEY_TO_FILE)) {
+    const legacyPath = path.join(LEGACY_DATA_DIR, fileName);
+    const targetPath = path.join(DATA_DIR, fileName);
+
+    if (!fs.existsSync(targetPath) && fs.existsSync(legacyPath)) {
+      fs.copyFileSync(legacyPath, targetPath);
+      console.log(`📦 Migrated legacy data: ${fileName}`);
+    }
+  }
 }
 
 function getStateFilePath(key) {
@@ -153,6 +176,7 @@ export async function initPersistentCache(defaults = {}) {
 
   initPromise = (async () => {
     ensureDataDir();
+    migrateLegacyFiles();
 
     try {
       await ensureMongoReady();
